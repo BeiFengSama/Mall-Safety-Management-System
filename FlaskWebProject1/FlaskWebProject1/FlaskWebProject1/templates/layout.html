@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>商场安全监控管理系统</title>
+    <link rel="stylesheet" type="text/css" href="/static/content/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/static/content/site.css" />
+    <script src="/static/scripts/bootstrap.min.js"></script>
+    <script src="/static/scripts/modernizr-2.6.2.js"></script>
+    <script src="/static/scripts/jquery-1.10.2.min.js"></script>
+    <script src="/static/scripts/jquery-1.10.2.js"></script>
+    <script src="/static/scripts/respond.js"></script>
+    <style>
+        *{
+            padding:0;
+            margin:0;
+            text-decoration:none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="collapse" id="navbarToggleExternalContent">
+        <div class="bg-dark p-4">
+          <h5 class="text-white h4">Collapsed content</h5>
+          <span class="text-muted">Toggleable via the navbar brand.</span>
+        </div>
+      </div>
+      <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
+      </nav>
+    </br>
+    <div class="container body-content">
+        <div class="jumbotron">
+            <h1>日期:{{nowtime}}</h1>
+        </div>
+    </br></br>
+        <div class="row">
+            <div class="col-md-4">
+                <h2>湿度（单位：%）<div id="p1"></div></h2>
+            </div>
+            <div class="col-md-4">
+                <h2>温度（单位：℃）<div id="p2"></div></h2>
+            </div>
+            <div class="col-md-4">
+                <h2>光强（单位：lux）<div id="p3"></div></h2>
+            </div>
+        </div>
+        <div class="row">
+        </br></br>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2>大气压强（单位：pa）<div id="p4"></div></h2>
+            </div>
+            <div class="col-md-4">
+                <h2>报警（1:报警 0:不报警）<div id="p5"></div></h2>
+            </div>
+            <div class="col-md-4">
+                <h2>灯控开关</h2>
+                <div class="btn-group btn-group-lg" role="group" aria-label="Basic checkbox toggle button group">
+                    <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off">
+                    <label class="btn btn-outline-warning" for="btncheck1">LED 1</label>
+                  
+                    <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off">
+                    <label class="btn btn-outline-warning" for="btncheck2">LED 2</label>
+                  
+                    <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off">
+                    <label class="btn btn-outline-warning" for="btncheck3">LED 3</label>
+                  </div>
+            </div>
+        </div>
+    </br></br></br></br></br>
+        <hr />
+        <footer>
+            <p>&copy; {{ year }} - 商场安全监控管理系统</p>
+        </footer>
+    </div>
+
+    {% block scripts %}{% endblock %}
+
+    <script>
+        $(document).ready(function () {
+            refreshMessages(); // 页面加载完成后先执行一次局部刷新
+            setInterval(refreshMessages, 500); // 每隔1秒执行一次局部刷新
+        });
+        var state = 0;
+        var led_state_1 = 0;
+        var led_state_2 = 0;
+        var led_state_3 = 0;
+        var led_1 = $("#btncheck1");
+        var led_2 = $("#btncheck2");
+        var led_3 = $("#btncheck3");
+        $(led_1).click(function(){
+            if(led_state_1 == 0)   led_state_1 = 1;
+            else led_state_1 = 0;
+            updateLED();
+          });
+          $(led_2).click(function(){
+            if(led_state_2 == 0)   led_state_2 = 1;
+            else led_state_2 = 0;
+            updateLED();
+          });
+          $(led_3).click(function(){
+            if(led_state_3 == 0)   led_state_3 = 1;
+            else led_state_3 = 0;
+            updateLED();
+          });
+          function updateLED(){
+            state = led_state_1+2*led_state_2+4*led_state_3;
+            console.log(state);
+            $.ajax({
+                url:'/updateLED',
+                data:{
+                    sta:state
+                },
+                type:'GET',
+                success:function(){
+
+                }
+            });
+          };
+          function refreshMessages() {
+            $.ajax({
+                url: '/refresh', // 后端接口的URL
+                type: 'GET',
+                success: function (data) { // 获取到新的消息后的回调函数
+                    var s = data
+                    var Hum = s.indexOf("Hum:")
+                    var Tem = s.indexOf("Tem:")
+                    var Lux = s.indexOf("Lux:")
+                    var Pre = s.indexOf("Pre:")
+                    var Ale = s.indexOf("Ale:")
+                    var qwe = $("#p1")
+                    $(qwe).empty()
+                    $(qwe).append(data.substring(Hum, Hum + 10))
+                    var qwe = $("#p2")
+                    $(qwe).empty()
+                    $(qwe).append(data.substring(Tem, Tem + 9))
+                    var qwe = $("#p3")
+                    $(qwe).empty()
+                    $(qwe).append(data.slice(Lux, Lux + 9))
+                    var qwe = $("#p4")
+                    $(qwe).empty()
+                    $(qwe).append(data.slice(Pre, Pre + 11))
+                    var qwe = $("#p5")
+                    $(qwe).empty()
+                    $(qwe).append(data.slice(Ale, Ale + 6))
+                }
+            });
+        }
+    </script>
+</body>
+</html>
